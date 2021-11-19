@@ -1,6 +1,6 @@
 <template>
   <div id="app" :class="theme" class="flex h-screen overflow-hidden
-                                      bg-yellow-50 dark:bg-gray-800"
+                                      bg-orange-light dark:bg-gray-800"
   >
     <div class="grid gap-5
                 grid-cols-2 md:grid-cols-3
@@ -22,7 +22,11 @@
                                  cursor-pointer"
       >
         <div class="relative">
-          <input type="checkbox" id="toggle" class="sr-only" @click="toggleTheme">
+          <input type="checkbox"
+                 id="toggle"
+                 v-model="isDark"
+                 class="sr-only"
+          >
           <div class="block
                       h-8 md:h-11 w-14 md:w-20
                       bg-gray-700 rounded-lg"
@@ -60,50 +64,60 @@
                 mt-36 md:mt-20"
     >
       <div v-if="isLoading" class="flex flex-col
-                                   text-gray-700 text-4xl font-bold
-                                   items-center mt-44"
+                                   items-center mt-44
+                                   text-gray-700 dark:text-gray-200 text-4xl font-bold"
       >
-        <img src="./assets/icons/github-alt.svg" class="h-44 mb-7 animate-bounce">
+        <img :src="getModePath('github-alt.svg')" class="h-44 mb-7 animate-bounce">
         LOADING
       </div>
 
       <div v-if="!isLoading && repositories.length"
-           class="w-4/5 md:w-1/3
+           class="w-11/12 md:w-1/3
                   mt-5 md:mt-5
                   mb-5"
       >
         <div v-for="repository in repositories"
              :key="repository"
              class="grid
-                    grid-cols-2 md:grid-cols-3
+                    grid-cols-6 md:grid-cols-12
                     p-5 mb-5
-                    bg-gray-100 shadow-lg rounded-lg"
+                    bg-orange-pale shadow-lg
+                    dark:bg-gray-700
+                    rounded-lg"
         >
           <img :src="repository.owner.avatar_url" class="rounded-full
                                                          h-8 w-8 p-0
                                                          row-span-2 md:row-span-1"
           />
-          <a :href="repository.owner.html_url" class="p-0 flex items-center">
-            <img src="./assets/icons/user.svg" class="h-4 mr-2"/>
-            {{ repository.owner.login }}
-            <span class="invisible md:visible ml-2">/</span>
-          </a>
-          <a :href="repository.html_url" class="p-0 flex items-center">
-            <img src="./assets/icons/book.svg" class="h-4 mr-2"/>
-            {{ repository.name }}
-          </a>
+          <div class="text-gray-600 dark:text-gray-100
+                      md:col-span-11 md:flex"
+          >
+            <a :href="repository.owner.html_url" class="p-0 flex items-center mr-3 col-span-5">
+              <img :src="getModePath('user.svg')" class="h-4 mr-2"/>
+              {{ repository.owner.login }}
+            </a>
+            <a :href="repository.html_url" class="p-0 flex items-center col-span-5 whitespace-nowrap">
+              <img :src="getModePath('book.svg')" class="h-4 mr-2"/>
+              {{ repository.name }}
+            </a>
+          </div>
           <div class="mt-5 mb-5
-                      text-sm text-gray-900
-                      col-span-2 md:col-span-3"
+                      text-sm text-gray-600 dark:text-gray-400
+                      col-span-6 md:col-span-12"
           >
             {{ repository.description }}
           </div>
-          <span class="p-0 text-orange align-middle">{{ repository.language }}</span>
-          <div class="p-0
-                      flex items-center justify-end
-                      col-span-1 md:col-span-2"
+          <span class="p-0 align-middle
+                       text-orange
+                       col-span-3 md:col-span-6"
           >
-            <img src="./assets/icons/star.svg" class="h-3 mr-1">
+            {{ repository.language }}
+          </span>
+          <div class="p-0 text-gray-600 dark:text-gray-100
+                      flex items-center justify-end
+                      col-span-3 md:col-span-6"
+          >
+            <img :src="getModePath('star.svg')" class="h-3 mr-1">
             {{ repository.stargazers_count }}
           </div>
         </div>
@@ -122,23 +136,18 @@ export default {
     repositories: [],
     search: "",
     isLoading: false,
-    theme: localStorage.getItem("theme")
+    isDark: false
   }),
-  beforeMount() {
-    const cachedTheme = localStorage.theme ? localStorage.theme : false
-    const userPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    if (cachedTheme)
-      localStorage.theme = cachedTheme
-    else if (userPrefersDark)
-      localStorage.theme = "dark"
-    else
-      localStorage.theme = "light"
+  mounted() {
+    let cash = localStorage.isDark
+    if (cash) {
+      this.toggleTheme(cash)
+    }
   },
   watch: {
-    theme(newTheme) {
-      newTheme === "light"
-        ? document.querySelector("html").classList.remove("dark")
-        : document.querySelector("html").classList.add("dark")
+    isDark (value) {
+      this.toggleTheme(value)
+      localStorage.isDark = value
     }
   },
   methods: {
@@ -161,12 +170,13 @@ export default {
       this.search = ""
       this.repositories = []
     },
-    toggleTheme() {
-      console.log("TOGGLE")
-      switch (localStorage.theme) {
-        case "light": localStorage.theme = "dark"; break
-        default: localStorage.theme = "light"; break
-      }
+    toggleTheme(value) {
+      value === true ? document.querySelector("html").classList.add("dark") : document.querySelector("html").classList.remove("dark")
+    },
+    getModePath(icon) {
+      if (this.isDark) {
+        return require(`./assets/icons/dark_mode/${ icon }`)
+      } else { return require(`./assets/icons/${ icon }`) }
     }
   }
 }
@@ -178,7 +188,24 @@ export default {
   background-size: 1.6em
 input[type="checkbox"]:checked ~ .dot
   transform: translateX(100%)
-  //background-color: #48bb78
   background: url("./assets/icons/moon.svg") no-repeat center
   background-size: 1.6em
+
+::-webkit-scrollbar
+  width: 17px
+
+::-webkit-scrollbar-track
+  background: transparent
+  &:hover
+    cursor: pointer
+
+::-webkit-scrollbar-thumb
+  background: #b2b8c0
+  border: 5px solid transparent
+  border-radius: 1em
+  background-clip: padding-box
+  &:hover
+    background: #e3680a
+    border: 5px solid transparent
+    background-clip: padding-box
 </style>

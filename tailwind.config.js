@@ -11,6 +11,8 @@ module.exports = {
         'ternary-light': '#f6f7f8',
 
         'orange': '#e3680a',
+        'orange-light': '#fffbf3',
+        'orange-pale': '#fcf8ee',
 
         'primary-dark': '#0D2438',
         'secondary-dark': '#102D44',
